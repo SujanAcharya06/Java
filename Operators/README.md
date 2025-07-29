@@ -41,3 +41,42 @@ num1 = +num2; // compilation fails
 ---
 
 ## Increment and Decrement operators
+```java
+// Pre Increment
+int num1 = 45;
+int num2 = 4;
+num2 = num1++ + 5; // Assigns 50 to num2 and num1 becomes 46; first the expression is evaluated then the value will be incremented
+
+// Post Increment
+int num1= 45;
+int num2 = 4;
+num2 = ++num1 + 5; // Increments num2 by 1 and then evaluates the expression, num2 = 51
+
+
+int num = 9;
+num = num++;
+// 1. Since num++ uses postfix increment operator the current value of num(which is 9) is used in the expression.
+// 2. The expression becomes num=9
+// 3. The value of num is then incremented by 1 in memory as the second effect of num++. At the point, the value of num is 10 in memory
+// 4. The expression num=9 is evaluated and then value 9 is assigned to num. The final value of the variable num in memory is 9. In fact, although num momentarily had a value of 10 in a previous step, this step overwrote that value with 9.
+```
+
+---
+
+## Logical Operators
+
+1. Logical NOT(!) -> unary
+2. Logical Short-Circuit AND (&&) -> binary -> evaluates only one side of expression
+3. Logical AND(&) -> binary -> evaulates both sides of expression
+4. Logical Short-Circuit OR (||) -> binary -> evaluates only one side of expression
+5. Logical OR(|) -> binary -> evaulates both sides of expression
+6. Logical XOR Operator(^) -> like charges repel and unlike charges attract
+7. Compound Logical Assignment Operators (|=, &=, ^=)
+
+
+
+
+
+
+
+
