@@ -72,3 +72,66 @@ num = num++;
 5. Logical OR(|) -> binary -> evaulates both sides of expression
 6. Logical XOR Operator(^) -> like charges repel and unlike charges attract
 7. Compound Logical Assignment Operators (|=, &=, ^=)
+8. Bitwise Operators
+    - perform operations at the bit level.
+    - can be applied to integral types (byte, short, int, long and char)
+
+    - Bitwise NOT operator
+    ![](/home/sujanacharya/Documents/repos/Java/Operators/assets/bitwise_operator.png)
+    ![](assets/bitwise_NOT_operator.png)
+    ![](assets/neg_number_in_binary.png)
+
+    - Bitwise AND operator
+
+    ![bitwise AND](assets/bitwise_AND_Operator.png)
+
+    - Bitwise OR operator
+    ![](assets/bitwise_OR.png)
+
+    - Bitwise XOR operator
+    ![](assets/bitwise_XOR.png)
+
+    - Left Shift operator
+    ![](assets/left_shift.png)
+        - x * 2^n
+
+    - Signed right shift operator(>>)
+    ![](assets/signed_right_shift.png)
+    ![](assets/signed_right_shift_ex2.png)
+
+    - Unsigned right shift operator
+    ![](assets/unsigned_right_shift_op.png)
+
+---
+9. Compound assignment bitwise operators
+
+    ![](assets/compound_bitwise_operator.png)
+---
+
+10. Ternary/ Compound operator
+
+![](assets/ternary_op.png)
+
+---
+
+### Java Operators Precedence & Associativity
+
+
+![](assets/precendence.png)
+
+![](assets/associativity.png)
+
+---
+
+### Prcedence score
+
+![](assets/precedence_score1.png)
+
+
+![](assets/precedence_score2.png)
+
+![](assets/precedence_score3.png)
+
+![](assets/precedence_score4.png)
+
+![](assets/prcedence_score5.png)
