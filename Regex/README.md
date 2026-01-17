@@ -147,7 +147,7 @@ whatever is inside <name>...</name>
 
 ---
 
-# 6️⃣ `?` — THREE different meanings 😈 (important)
+# 6️⃣ `?` — THREE different meanings (important)
 
 ### A) Make something optional
 
@@ -164,7 +164,7 @@ colour
 
 ---
 
-### B) Lazy (non-greedy) quantifier ⭐ THIS IS YOUR `.*?`
+### B) Lazy (non-greedy) quantifier THIS IS YOUR `.*?`
 
 Normally:
 
@@ -195,7 +195,7 @@ Text:
 <tag>TWO</tag>
 ```
 
-#### ❌ Greedy
+#### Greedy
 
 ```regex
 <tag>(.*)</tag>
@@ -219,8 +219,7 @@ Matches:
 ```
 ONE
 ```
-
-💡 **That’s why `(.*?)` is used for XML-like data**
+ **That’s why `(.*?)` is used for XML-like data**
 
 ---
 
@@ -272,7 +271,7 @@ Same as:
 
 ---
 
-# Escaping special characters
+# 🔟 Escaping special characters
 
 These are **special**:
 
@@ -308,7 +307,7 @@ That’s it.
 
 ---
 
-# 🧪 Your XML example — fully decoded
+# Your XML example — fully decoded
 
 ```regex
 <jsdlejb:servername>(.*?)</jsdlejb:servername>
