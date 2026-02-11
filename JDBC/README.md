@@ -11,7 +11,7 @@
 #### 4. Create Connection
 ```java
 Connection con;
-con.DriverManager.getConnection(url, user, password);
+con = DriverManager.getConnection(url, user, password);
 ```
 
 #### 5. Create Statement
