@@ -92,3 +92,177 @@
 > [!NOTE]
 > Do not use spring-boot-devtools dependency along with hibernate
 
+> [!NOTE]
+> we can close the `Session` object and then `SessionFactory` object 
+
+> [!NOTE]
+> `SessionFactory` is a heavy resource object, we can use `try with resources` so that the resources are closed automatically
+- as of now we use `close()` method
+
+### Fetching The data
+
+- When `fetching` values we don't need `Transaction` reference
+	- the reference is needed only when we manipulate the database 
+
+- We can use `get()` method which will return the `Object`
+	- `get(Type.class,primaryKey)` method is `deprecated` in 7.1.0 but not yet removed
+		- Type.class -> the type of object to be returned
+		- primaryKey -> Id
+		> [!NOTE]
+		> we can use `find()` method
+		- `find(Type.class, primaryKey)`;
+	- If we fire this query and `don't` find anything then we get `null`
+		- then if we try to perform any action on this we get
+			- `NullPointerException`
+	
+### Update and Delete Records
+
+- We use `update()` but this is deprecated
+	- we need to use `merge()` method
+> [!NOTE]
+> update and delete actions must be performed inside a transaction
+-	 if the data is not there, hibernate will first perform a `select` query and then `insert` query
+```sql
+Hibernate: 
+    select
+        s1_0.rollNo,
+        s1_0.sAge,
+        s1_0.sName 
+    from
+        Student s1_0 
+    where
+        s1_0.rollNo=?
+Hibernate: 
+    insert 
+    into
+        Student
+        (sAge, sName, rollNo) 
+    values
+        (?, ?, ?)
+Student [rollNo=105, sName=Todo, sAge=26]
+```
+
+- For deleting
+	- we have `delete()` method which was deprecated
+		- we can use `remove(Object o)` method which will take Object type
+		- if we have only primary key
+			- we can first use `find()` method to get the object then use this object to delete`remove()` that particular record only
+
+### Changing Table and Column names
+
+- If `<property name="hibernate.hbm2ddl.auto">update</property>`
+	- it will create if the table is not there, if it is there it will just update the record
+```log
+Hibernate: 
+    create table Alien (
+        aId integer not null,
+        aName varchar(255),
+        aTech varchar(255),
+        primary key (aId)
+    )
+Hibernate: 
+    insert 
+    into
+        Alien
+        (aName, aTech, aId) 
+    values
+        (?, ?, ?)
+Alien [aId=101, aName=Jhon, aTech=Data Engineering]
+```
+
+- If `<property name="hibernate.hbm2ddl.auto">create</property>`
+	- hibernate will check if the table is already present or not
+	- if present it will will drop
+		- basically it will create new table each time the app runs
+```log
+Hibernate: 
+    drop table if exists Alien cascade
+Hibernate: 
+    create table Alien (
+        aId integer not null,
+        aName varchar(255),
+        aTech varchar(255),
+        primary key (aId)
+    )
+2026-02-11T07:04:00.405+05:30  INFO 20966 --- [demo] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@39a2e77d] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+Hibernate: 
+    insert 
+    into
+        Alien
+        (aName, aTech, aId) 
+    values
+        (?, ?, ?)
+Alien [aId=101, aName=Jhon, aTech=Data Engineering]
+```
+
+- From the class name we get the entity name
+	- We have three different layers
+		- `Class name`
+		- `Entity name`
+		- `Table name`
+- The `table name` we get it from the `Entity name`
+	- Entity name we get it from `class` name by default
+
+- We can change the `Entity` name, if we don't want our class name to be the `Entity` name using below syntax
+	- `@Entity(name=entity_name)`
+		- this will create a table with name `entity_name`
+- If we do not wish to change the Entity name and only wish to change the column name we can do it using
+	-  annotation `@Table(name='new_table_name')`
+
+- Hibernate by default considers all variables and maps it to columns
+- If we do not wish to store any of the variable, if we require it for processing purpose
+	- we can use `@Transient` annotation on top the variable name
+
+### `@Embeddable`
+
+- If we have a complex type other than basic types, hibernate get confused on which type to use and throws this exception
+	`Exception in thread "main" org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException: Could not determine recommended JdbcType for Java type 'com.example.hibernate_test.Laptop'`
+- We can use `@Embeddable` on top of this complex type here `Laptop`
+	- we are trying to embed `Laptop` details inside `Alien`
+```sql
+Hibernate: 
+    drop table if exists Alien cascade
+Hibernate: 
+    create table Alien (
+        aId integer not null,
+        ram integer,
+        aName varchar(255),
+        aTech varchar(255),
+        brand varchar(255),
+        model varchar(255),
+        primary key (aId)
+    )
+Hibernate: 
+    insert 
+    into
+        Alien
+        (aName, aTech, brand, model, ram, aId) 
+    values
+        (?, ?, ?, ?, ?, ?)
+Alien [aId=101, aName=Jhon, aTech=Data Engineering, laptop=Laptop [brand=Asus, model=Tuf, ram=16]]
+```
+
+- Now, here when we try to fire a select query, hibernate does a insert first based on these logs
+```logs
+Hibernate: 
+    drop table if exists Alien cascade
+Hibernate: 
+    create table Alien (
+        aId integer not null,
+        ram integer,
+        aName varchar(255),
+        aTech varchar(255),
+        brand varchar(255),
+        model varchar(255),
+        primary key (aId)
+    )
+2026-02-11T07:53:16.978+05:30  INFO 34302 --- [demo] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@37196d53] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+Hibernate: 
+    insert 
+    into
+        Alien
+        (aName, aTech, brand, model, ram, aId) 
+    values
+        (?, ?, ?, ?, ?, ?)
+Alien [aId=101, aName=Jhon, aTech=Data Engineering, laptop=Laptop [brand=Asus, model=Tuf, ram=16]]
+```
