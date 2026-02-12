@@ -88,10 +88,14 @@ pst.setInt(1, sid);
 pst.setString(2, sname);
 pst.setInt(3, marks);
 
-pst.execute();
+pst.executeUpdate();
 
 con.close();
 ```
+
+- `pst.executeUpdate()`
+> [!NOTE]
+> either (1) the row count for SQL Data Manipulation Language (DML) statements or (2) 0 for SQL statements that return nothing
 
 - We have three kinds of Statements
 1. `Statement`
