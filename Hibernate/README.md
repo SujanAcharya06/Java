@@ -266,3 +266,263 @@ Hibernate:
         (?, ?, ?, ?, ?, ?)
 Alien [aId=101, aName=Jhon, aTech=Data Engineering, laptop=Laptop [brand=Asus, model=Tuf, ram=16]]
 ```
+
+### Mappings
+
+##### `@OneToOne` Mapping
+
+##### `@OneToMany` and `@ManyToOne` mapping 
+- by default both table tries to create a reference table
+- we can use `mapped="value"`
+	- where `value` is the field referenced in `@MantToMany`
+
+##### `@MantToMany` mapping
+- here also both tables tries to create a reference table
+- we can use `mappedBy="value"`
+	- where `value` is the field referenced in `@MantToMany`
+
+### Eager and Lazy Fetch
+
+- When we do `session.find()` in the same `session` as the `persist` it won't fire a select query
+- In hibernate we have two different levels of cache
+	1. level one cache
+	2. level two cache
+
+```java
+@SpringBootApplication
+public class DemoApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(DemoApplication.class, args);
+
+		Laptop l1 = new Laptop();
+		l1.setLid(1);
+		l1.setBrand("Asus");
+		l1.setModel("Tuf");
+		l1.setRam(16);
+
+		Laptop l2 = new Laptop();
+		l2.setLid(2);
+		l2.setBrand("Apple");
+		l2.setModel("Macbook Air");
+		l2.setRam(32);
+
+		Laptop l3 = new Laptop();
+		l3.setLid(3);
+		l3.setBrand("Dell");
+		l3.setModel("Inspiron");
+		l3.setRam(8);
+
+		Alien a1 = new Alien();
+		a1.setaId(101);
+		a1.setaName("Jhon");
+		a1.setaTech("Java");
+
+		Alien a2 = new Alien();
+		a2.setaId(102);
+		a2.setaName("Mark");
+		a2.setaTech("Python");
+
+		a1.setLaptops(Arrays.asList(l1, l2));
+		a2.setLaptops(Arrays.asList(l3));
+
+		Configuration cfg = new Configuration();
+		// cfg.addAnnotatedClass(com.example.hibernate_test.Student.class);
+		// cfg.configure();
+
+		SessionFactory sf = cfg
+		.addAnnotatedClass(com.example.hibernate_test.Alien.class)
+		.addAnnotatedClass(com.example.hibernate_test.Laptop.class)
+		.configure()
+		.buildSessionFactory(); // cfg.buildSessionFactory();
+		Session session = sf.openSession();
+
+		Transaction transaction = session.beginTransaction();
+
+		session.persist(l1);
+		session.persist(l2);
+		session.persist(l3);
+		session.persist(a1);
+		session.persist(a2);
+
+		transaction.commit();
+
+		Alien obj = session.find(Alien.class, 101);
+		System.out.println(obj);
+
+		session.close();
+		sf.close();
+	}
+}
+```
+
+```log
+2026-02-12T07:58:51.749+05:30  INFO 21900 --- [demo] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: set client_min_messages = WARNING
+2026-02-12T07:58:51.763+05:30  INFO 21900 --- [demo] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@20a116a0] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+Hibernate: alter table if exists Alien_Laptop drop constraint if exists FKke7dk37jcwerfmirin55a5gki
+Hibernate: alter table if exists Alien_Laptop drop constraint if exists FKc1rf1fpygccbu7jq07v4lgiuq
+Hibernate: drop table if exists Alien cascade
+Hibernate: drop table if exists Alien_Laptop cascade
+Hibernate: drop table if exists Laptop cascade
+Hibernate: create table Alien (aId integer not null, aName varchar(255), aTech varchar(255), primary key (aId))
+2026-02-12T07:58:51.777+05:30  INFO 21900 --- [demo] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@34ea86ff] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+Hibernate: create table Alien_Laptop (Alien_aId integer not null, laptops_lid integer not null unique)
+Hibernate: create table Laptop (lid integer not null, ram integer not null, brand varchar(255), model varchar(255), primary key (lid))
+Hibernate: alter table if exists Alien_Laptop add constraint FKke7dk37jcwerfmirin55a5gki foreign key (laptops_lid) references Laptop
+Hibernate: alter table if exists Alien_Laptop add constraint FKc1rf1fpygccbu7jq07v4lgiuq foreign key (Alien_aId) references Alien
+Hibernate: insert into Laptop (brand,model,ram,lid) values (?,?,?,?)
+Hibernate: insert into Laptop (brand,model,ram,lid) values (?,?,?,?)
+Hibernate: insert into Laptop (brand,model,ram,lid) values (?,?,?,?)
+Hibernate: insert into Alien (aName,aTech,aId) values (?,?,?)
+Hibernate: insert into Alien (aName,aTech,aId) values (?,?,?)
+Hibernate: insert into Alien_Laptop (Alien_aId,laptops_lid) values (?,?)
+Hibernate: insert into Alien_Laptop (Alien_aId,laptops_lid) values (?,?)
+Hibernate: insert into Alien_Laptop (Alien_aId,laptops_lid) values (?,?)
+Alien [aId=101, aName=Jhon, aTech=Java, laptops=[Laptop [lid=1, brand=Asus, model=Tuf, ram=16], Laptop [lid=2, brand=Apple, model=Macbook Air, ram=32]]]
+```
+
+- If we create a new session within existing session then hibernate fires a `select query`
+```java
+Configuration cfg = new Configuration();
+// cfg.addAnnotatedClass(com.example.hibernate_test.Student.class);
+// cfg.configure();
+
+SessionFactory sf = cfg
+.addAnnotatedClass(com.example.hibernate_test.Alien.class)
+.addAnnotatedClass(com.example.hibernate_test.Laptop.class)
+.configure()
+.buildSessionFactory(); // cfg.buildSessionFactory();
+Session session = sf.openSession();
+
+Transaction transaction = session.beginTransaction();
+
+session.persist(l1);
+session.persist(l2);
+session.persist(l3);
+session.persist(a1);
+session.persist(a2);
+
+transaction.commit();
+
+Session session1 = sf.openSession();
+
+Alien obj = session1.find(Alien.class, 101);
+// System.out.println(obj);
+session1.close();
+
+session.close();
+
+sf.close();
+```
+- If we are not asking as seen 
+- `// System.out.println(obj);`
+
+```log
+2026-02-12T08:13:55.928+05:30  WARN 26167 --- [demo] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgresPlusDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-02-12T08:13:55.938+05:30  INFO 26167 --- [demo] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/hibernateTest]
+	Database driver: org.postgresql.Driver
+	Database version: 17.7
+	Autocommit mode: false
+	Isolation level: undefined/unknown
+	Pool: DriverManagerConnectionProviderImpl
+	Minimum pool size: 1
+	Maximum pool size: 20
+2026-02-12T08:13:56.529+05:30  INFO 26167 --- [demo] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: set client_min_messages = WARNING
+2026-02-12T08:13:56.542+05:30  INFO 26167 --- [demo] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@15a0f9] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+Hibernate: alter table if exists Alien_Laptop drop constraint if exists FKke7dk37jcwerfmirin55a5gki
+Hibernate: alter table if exists Alien_Laptop drop constraint if exists FKc1rf1fpygccbu7jq07v4lgiuq
+Hibernate: drop table if exists Alien cascade
+Hibernate: drop table if exists Alien_Laptop cascade
+Hibernate: drop table if exists Laptop cascade
+Hibernate: create table Alien (aId integer not null, aName varchar(255), aTech varchar(255), primary key (aId))
+2026-02-12T08:13:56.556+05:30  INFO 26167 --- [demo] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@417b3642] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+Hibernate: create table Alien_Laptop (Alien_aId integer not null, laptops_lid integer not null unique)
+Hibernate: create table Laptop (lid integer not null, ram integer not null, brand varchar(255), model varchar(255), primary key (lid))
+Hibernate: alter table if exists Alien_Laptop add constraint FKke7dk37jcwerfmirin55a5gki foreign key (laptops_lid) references Laptop
+Hibernate: alter table if exists Alien_Laptop add constraint FKc1rf1fpygccbu7jq07v4lgiuq foreign key (Alien_aId) references Alien
+Hibernate: insert into Laptop (brand,model,ram,lid) values (?,?,?,?)
+Hibernate: insert into Laptop (brand,model,ram,lid) values (?,?,?,?)
+Hibernate: insert into Laptop (brand,model,ram,lid) values (?,?,?,?)
+Hibernate: insert into Alien (aName,aTech,aId) values (?,?,?)
+Hibernate: insert into Alien (aName,aTech,aId) values (?,?,?)
+Hibernate: insert into Alien_Laptop (Alien_aId,laptops_lid) values (?,?)
+Hibernate: insert into Alien_Laptop (Alien_aId,laptops_lid) values (?,?)
+Hibernate: insert into Alien_Laptop (Alien_aId,laptops_lid) values (?,?)
+Hibernate: select a1_0.aId,a1_0.aName,a1_0.aTech from Alien a1_0 where a1_0.aId=?
+```
+
+- Level 1 cache by default we will get from Alien
+- By default when it sees a `Collection` like in laptop it does a lazy fetch
+- from logs we observe
+- `select a1_0.aId,a1_0.aName,a1_0.aTech from Alien a1_0 where a1_0.aId=?`
+- it won't fetch laptop details
+
+- when we print details it will fetch laptop details 
+
+
+```log
+2026-02-12T08:07:36.914+05:30  WARN 24311 --- [demo] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgresPlusDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-02-12T08:07:36.924+05:30  INFO 24311 --- [demo] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/hibernateTest]
+	Database driver: org.postgresql.Driver
+	Database version: 17.7
+	Autocommit mode: false
+	Isolation level: undefined/unknown
+	Pool: DriverManagerConnectionProviderImpl
+	Minimum pool size: 1
+	Maximum pool size: 20
+2026-02-12T08:07:37.553+05:30  INFO 24311 --- [demo] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: set client_min_messages = WARNING
+2026-02-12T08:07:37.566+05:30  INFO 24311 --- [demo] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@20a116a0] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+Hibernate: alter table if exists Alien_Laptop drop constraint if exists FKke7dk37jcwerfmirin55a5gki
+Hibernate: alter table if exists Alien_Laptop drop constraint if exists FKc1rf1fpygccbu7jq07v4lgiuq
+Hibernate: drop table if exists Alien cascade
+Hibernate: drop table if exists Alien_Laptop cascade
+Hibernate: drop table if exists Laptop cascade
+Hibernate: create table Alien (aId integer not null, aName varchar(255), aTech varchar(255), primary key (aId))
+2026-02-12T08:07:37.579+05:30  INFO 24311 --- [demo] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@34ea86ff] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+Hibernate: create table Alien_Laptop (Alien_aId integer not null, laptops_lid integer not null unique)
+Hibernate: create table Laptop (lid integer not null, ram integer not null, brand varchar(255), model varchar(255), primary key (lid))
+Hibernate: alter table if exists Alien_Laptop add constraint FKke7dk37jcwerfmirin55a5gki foreign key (laptops_lid) references Laptop
+Hibernate: alter table if exists Alien_Laptop add constraint FKc1rf1fpygccbu7jq07v4lgiuq foreign key (Alien_aId) references Alien
+Hibernate: insert into Laptop (brand,model,ram,lid) values (?,?,?,?)
+Hibernate: insert into Laptop (brand,model,ram,lid) values (?,?,?,?)
+Hibernate: insert into Laptop (brand,model,ram,lid) values (?,?,?,?)
+Hibernate: insert into Alien (aName,aTech,aId) values (?,?,?)
+Hibernate: insert into Alien (aName,aTech,aId) values (?,?,?)
+Hibernate: insert into Alien_Laptop (Alien_aId,laptops_lid) values (?,?)
+Hibernate: insert into Alien_Laptop (Alien_aId,laptops_lid) values (?,?)
+Hibernate: insert into Alien_Laptop (Alien_aId,laptops_lid) values (?,?)
+Hibernate: select a1_0.aId,a1_0.aName,a1_0.aTech from Alien a1_0 where a1_0.aId=?
+Hibernate: select l1_0.Alien_aId,l1_1.lid,l1_1.brand,l1_1.model,l1_1.ram from Alien_Laptop l1_0 join Laptop l1_1 on l1_1.lid=l1_0.laptops_lid where l1_0.Alien_aId=?
+Alien [aId=101, aName=Jhon, aTech=Java, laptops=[Laptop [lid=1, brand=Asus, model=Tuf, ram=16], Laptop [lid=2, brand=Apple, model=Macbook Air, ram=32]]]
+```
+
+- We can use `@OneToMany(fetch = FetchType.EAGER)` 
+	- by default if it sees collection it would use `LAZY` 
+	- if we want hibernate to fetch the referenced values
+```log
+t into auto-commit mode.
+Hibernate: alter table if exists Alien_Laptop drop constraint if exists FKke7dk37jcwerfmirin55a5gki
+Hibernate: alter table if exists Alien_Laptop drop constraint if exists FKc1rf1fpygccbu7jq07v4lgiuq
+Hibernate: drop table if exists Alien cascade
+Hibernate: drop table if exists Alien_Laptop cascade
+Hibernate: drop table if exists Laptop cascade
+Hibernate: create table Alien (aId integer not null, aName varchar(255), aTech varchar(255), primary key (aId))
+2026-02-12T09:45:54.949+05:30  INFO 28314 --- [demo] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@5ce41f1f] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+Hibernate: create table Alien_Laptop (Alien_aId integer not null, laptops_lid integer not null unique)
+Hibernate: create table Laptop (lid integer not null, ram integer not null, brand varchar(255), model varchar(255), primary key (lid))
+Hibernate: alter table if exists Alien_Laptop add constraint FKke7dk37jcwerfmirin55a5gki foreign key (laptops_lid) references Laptop
+Hibernate: alter table if exists Alien_Laptop add constraint FKc1rf1fpygccbu7jq07v4lgiuq foreign key (Alien_aId) references Alien
+Hibernate: insert into Laptop (brand,model,ram,lid) values (?,?,?,?)
+Hibernate: insert into Laptop (brand,model,ram,lid) values (?,?,?,?)
+Hibernate: insert into Laptop (brand,model,ram,lid) values (?,?,?,?)
+Hibernate: insert into Alien (aName,aTech,aId) values (?,?,?)
+Hibernate: insert into Alien (aName,aTech,aId) values (?,?,?)
+Hibernate: insert into Alien_Laptop (Alien_aId,laptops_lid) values (?,?)
+Hibernate: insert into Alien_Laptop (Alien_aId,laptops_lid) values (?,?)
+Hibernate: insert into Alien_Laptop (Alien_aId,laptops_lid) values (?,?)
+Hibernate: select a1_0.aId,a1_0.aName,a1_0.aTech,l1_0.Alien_aId,l1_1.lid,l1_1.brand,l1_1.model,l1_1.ram from Alien a1_0 left join Alien_Laptop l1_0 on a1_0.aId=l1_0.Alien_aId left join Laptop l1_1 on l1_1.lid=l1_0.laptops_lid where a1_0.aId=?
+```
