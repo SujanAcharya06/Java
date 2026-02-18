@@ -369,38 +369,538 @@ Compiling code in Laptop class
 ## Autowire
 - if we don't want to mention the property explicitly if we want to ask spring framework to search for the dependency based on name and type we can use
 		- `autowire="byName"`
-- tries to match the object by name
-		- if I have `autowire=byName` then if I explicitly provide
+```java
+public class Alien {
+	private int age;
+
+	private Computer com;
+
+	public Alien(int age) {
+		System.out.println("Single Parameterized constructor called");
+		this.age = age;
+	}
+
+	// @ConstructorProperties({ "age", "lap" })
+	// public Alien(int age, Laptop lap) {
+	// System.out.println("Two Parameterized constructor called");
+	// this.age = age;
+	// this.lap = lap;
+	// }
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(int age) {
+		// System.out.println("Setter called");
+		this.age = age;
+	}
+
+	public Alien() {
+		// System.out.println("Object created for Alien");
+	}
+
+	public void code() {
+		System.out.println("Inside Code method");
+		com.compile();
+	}
+
+	public Computer getCom() {
+		return com;
+	}
+
+	public void setCom(Computer com) {
+		this.com = com;
+	}
+
+}
+```
+```xml
+<bean id="alien" class="com.example.Alien">
+ <property name="age" value="24"></property>
+ <property name="lap1" ref="lap" />
+ <!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+ <!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+ <!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+ <!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+</bean>
+<bean id="lap1" class="com.example.Laptop">
+</bean>
+```
+- We can't use `<property name="lap1" ref="lap" />`
+- we get this error
+```output
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Feb 18, 2026 9:28:53 PM org.springframework.context.support.ClassPathXmlApplicationContext refresh
+WARNING: Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'alien' defined in class path resource [spring.xml]: Cannot resolve reference to bean 'lap' while setting bean property 'lap1'
+[WARNING] 
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'alien' defined in class path resource [spring.xml]: Cannot resolve reference to bean 'lap' while setting bean property 'lap1'
+    at org.springframework.beans.factory.support.BeanDefinitionValueResolver.resolveReference (BeanDefinitionValueResolver.java:377)
+    at org.springframework.beans.factory.support.BeanDefinitionValueResolver.resolveValueIfNecessary (BeanDefinitionValueResolver.java:135)
+
+```
+- as we have used `Computer` interface
+
+- When we use `name="com"` and `value="lap"`
+```xml
+<bean id="alien" class="com.example.Alien">
+	<property name="age" value="24"></property>
+	<property name="com" ref="lap1" />
+	<!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+	<!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+	<!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+	<!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+</bean>
+<bean id="lap1" class="com.example.Laptop">
+</bean>
+```
+
+```output
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created for laptop
+24
+Inside Code method
+Compiling using Laptop
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.634 s
+```
+- If we set `name="com"` and `ref="com"` same
+```xml
+<bean id="alien" class="com.example.Alien">
+	<property name="age" value="24"></property>
+	<property name="com" ref="com" />
+	<!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+	<!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+	<!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+	<!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+</bean>
+<bean id="com" class="com.example.Laptop">
+</bean>
+```
+- it will still work
+
+- now as `name` and `value` property is same if we do not use it say
+- we get a `NullPointerException`
+
+- we can tell spring to look at the `name="com"` and `autowire = byName`
+```xml
+<bean id="alien" class="com.example.Alien" autowire="byName">
+		<property name="age" value="24"></property>
+		<!-- <property name="com" ref="com" /> -->
+		<!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+		<!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+</bean>
+<bean id="com" class="com.example.Laptop">
+</bean>
+```
+
 - `<property name="name" ref="reference"` then this will be preferred over `Autowire`
-		- `autowire="byType"`
+
+> [!NOTE]
+> `autowire="byName"` will be considered only when we have not provided <property/> tag, if we provide both then the one provided in <property\> tag will be considered
+```xml
+<bean id="alien" class="com.example.Alien" autowire="byName">
+	<property name="age" value="24"></property>
+	<property name="com" ref="com1" />
+	<!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+	<!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+	<!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+	<!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+</bean>
+<bean id="com1" class="com.example.Laptop">
+</bean>
+<bean id="com" class="com.example.Desktop">
+</bean>
+```
+
+```output
+[INFO] 
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created for laptop
+24
+Inside Code method
+Compiling using Laptop
+[INFO] ------------------
+```
+
+
+- `autowire="byType"`
 - tries to match the object by type
+- when the bean name is different then the field name we can use above option
+```xml
+<bean id="alien" class="com.example.Alien" autowire="byType">
+	<property name="age" value="24"></property>
+	<!-- <property name="com" ref="com1" /> -->
+	<!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+	<!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+	<!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+	<!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+</bean>
+<bean id="com1" class="com.example.Laptop">
+</bean>
+	<!-- or -->
+<!-- <bean id="com2" class="com.example.Desktop"> -->
+<!-- </bean> -->
+```
+- when we use `autowire="byType"` it tells spring to check the reference type with bean type in the above example `com.example.Laptop` is an implementation of Computer and Computer have `com` field so it will match
+```output
+INFO] 
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+24
+Inside Code method
+Compiling using Desktop.
+[INFO] -----------------------
+```
 
 ## Primary Bean
-- if there is a confusion say the objects created for the insterfaces in bean and `autowire` is specified then `primary=true` specifed bean will be choosen
-		- if we are mentioning explicitly then it will prefer the specifed one
+
+- Based on previous example if we have set `autowire="byType"` and we have something like this
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!--    if we have one more class we can mention it here-->
+	<bean id="alien" class="com.example.Alien" autowire="byType">
+		<property name="age" value="24"></property>
+		<!-- <property name="com" ref="com1" /> -->
+		<!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+		<!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+	</bean>
+	<bean id="com1" class="com.example.Laptop">
+	</bean>
+	<bean id="com2" class="com.example.Desktop">
+	</bean>
+</beans>
+```
+
+- We will get `UnsatisfiedDependencyException`
+- Spring is confused as it find two references of same type and unable to inject properly 
+
+```output
+Feb 18, 2026 10:19:58 PM org.springframework.context.support.ClassPathXmlApplicationContext refresh
+WARNING: Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'alien' defined in class path resource [spring.xml]: Unsatisfied dependency expressed through bean property 'com': No qualifying bean of type 'com.example.Computer' available: expected single matching bean but found 2: com1,com2
+[WARNING] 
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'alien' defined in class path resource [spring.xml]: Unsatisfied dependency expressed through bean property 'com': No qualifying bean of type 'com.example.Computer' available: expected single matching bean but found 2: com1,com2
+    at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireByType (AbstractAutowireCapableBeanFactory.java:1543)
+    at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean (AbstractAutowireCapableBeanFactory.java:1437)
+```
+
+- if there is a confusion say the objects created for the interfaces in bean and `autowire` is specified then `primary=true` specified bean will be chosen
+	- if we are mentioning explicitly then it will prefer the specified one
+
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!--    if we have one more class we can mention it here-->
+	<bean id="alien" class="com.example.Alien" autowire="byType">
+		<property name="age" value="24"></property>
+		<!-- <property name="com" ref="com1" /> -->
+		<!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+		<!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+	</bean>
+	<bean id="com1" class="com.example.Laptop" primary="true">
+	</bean>
+	<bean id="com2" class="com.example.Desktop">
+	</bean>
+</beans>
+```
+
+```output
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created for laptop
+24
+Inside Code method
+Compiling using Laptop
+[INFO] ----------------------------------------------
+```
+- here also if we explicitly mention that we want to use `<property name="com" ref="com2" />` in `Alien` then that reference only will be injected
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!--    if we have one more class we can mention it here-->
+	<bean id="alien" class="com.example.Alien" autowire="byType">
+		<property name="age" value="24"></property>
+		<property name="com" ref="com2" />
+		<!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+		<!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+	</bean>
+	<bean id="com1" class="com.example.Laptop" primary="true">
+	</bean>
+	<bean id="com2" class="com.example.Desktop">
+	</bean>
+</beans>
+```
+
+```output
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created for laptop
+24
+Inside Code method
+Compiling using Desktop.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+```
+---
 
 ## Lazy init Bean
 - The Object will not be created by default only when we want to use it, it will be created.
-		- still singleton
-		- `lazy-init="true"`
-		- if a non-lazy(eager) bean is dependent on a lazy bean still it will create the object of a lazy bean.
+- singleton by default
+
+```java
+public class Desktop implements Computer {
+
+	public Desktop() {
+		System.out.println("Desktop object created");
+	}
+
+	@Override
+	public void compile() {
+		System.out.println("Compiling using Desktop.");
+	}
+
+}
+```
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!--    if we have one more class we can mention it here-->
+	<bean id="alien" class="com.example.Alien" autowire="byType">
+		<property name="age" value="24"></property>
+		<property name="com" ref="com1" />
+		<!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+		<!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+	</bean>
+	<bean id="com1" class="com.example.Laptop" primary="true">
+	</bean>
+	<bean id="com2" class="com.example.Desktop">
+	</bean>
+</beans>
+```
+
+```output
+[INFO] 
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created for Alien
+Object created for laptop
+Desktop object created
+24
+Inside Code method
+Compiling using Laptop
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+```
+
+- Say I do not want `Desktop` object to be created when the container is initialized
+- I want to create the object only when I call it for the first time
+- `lazy-init="true"`
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!--    if we have one more class we can mention it here-->
+	<bean id="alien" class="com.example.Alien" autowire="byType">
+		<property name="age" value="24"></property>
+		<property name="com" ref="com1" />
+		<!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+		<!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+	</bean>
+	<bean id="com1" class="com.example.Laptop" primary="true">
+	</bean>
+	<bean id="com2" class="com.example.Desktop" lazy-init="true">
+	</bean>
+</beans>
+```
+
+- Desktop object is not created yet
+
+```output
+[INFO] 
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created for Alien
+Object created for laptop
+24
+Inside Code method
+Compiling using Laptop
+[INFO] --------------------------------------------------
+```
+
+- Only when we call it
+```java
+public class App {
+	public static void main(String[] args) {
+
+		ApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
+		Alien obj1 = (Alien) context.getBean("alien");
+		System.out.println(obj1.getAge());
+		obj1.code();
+
+		Desktop obj2 = (Desktop) context.getBean("com2");
+	}
+}
+```
+- the object will be created.
+```output
+INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created for Alien
+Object created for laptop
+24
+Inside Code method
+Compiling using Laptop
+Desktop object created
+[INFO] ----------------------------
+```
+- Once it is created the object will be there in the container, if we want to reuse it we can
+
+> [!NOTE]
+ > if a non-lazy(eager) bean is dependent on a lazy bean still it will create the object of a lazy bean.
 
 ## Get bean by type
 - we can specify the class of which you want the object in the `getBean()` method
-		- Don't have to do type caste for the required class
-		- `<T> T getBean(String name, Class<T> requiredType)`
-		- We can either specify name of the bean or the type of class the object we want
-- if we are specifing the class then in the bean tag there is no need for `id` vale
+	- Don't have to do type caste for the required class
+	- `<T> T getBean(String name, Class<T> requiredType)`
+	- We can either specify name of the bean or the type of class the object we want
+```java
+public class App {
+	public static void main(String[] args) {
+
+		ApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
+		Alien obj1 = context.getBean("alien", Alien.class);
+		System.out.println(obj1.getAge());
+		obj1.code();
+
+		Desktop obj2 = context.getBean("com2", Desktop.class);
+	}
+}
+```
+- if we are specifying the class then in the bean tag there is no need for `id` value
+- and we do not need `id` to be provided in `getBean()` also
+
+```java
+public class App {
+	public static void main(String[] args) {
+
+		ApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
+		Alien obj1 = context.getBean("alien", Alien.class);
+		System.out.println(obj1.getAge());
+		obj1.code();
+
+		Desktop obj2 = context.getBean(Desktop.class);
+	}
+}
+```
+
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!--    if we have one more class we can mention it here-->
+	<bean id="alien" class="com.example.Alien" autowire="byType">
+		<property name="age" value="24"></property>
+		<property name="com" ref="com1" />
+		<!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+		<!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+	</bean>
+	<bean id="com1" class="com.example.Laptop" primary="true">
+	</bean>
+	<bean class="com.example.Desktop" lazy-init="true">
+	</bean>
+</beans>
+```
+
+- When we try to create an object of type `Computer` with reference type `Computer` itself
+- As `Computer` is interface here and all interfaces will be compiled to `.class` we can use it as reference type
+- and in Laptop bean if we remove `primary="true"`
+	- we get below `NoUniqueBeanDefinitionException`
+
+```output
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created for Alien
+Object created for laptop
+24
+Inside Code method
+Compiling using Laptop
+[WARNING] 
+org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type 'com.example.Computer' available: expected single matching bean but found 2: com1,com.example.Desktop#0
+    at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveNamedBean (DefaultListableBeanFactory.java:1612)
+    at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveBean (DefaultListableBeanFactory.java:556)
+    at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBean (DefaultListableBeanFactory.java:384)
+    at org.springframework.beans.factory.support.DefaultListableBeanFactor
+```
+
+- If we want to solve this problem we specify `primary="true"`
+
+> [!NOTE]
+> If we have two beans of same type, it is good to go with the `autowire=byName`
+
+---
 
 ## Inner Bean
 - To limit a bean only for a particular class
-```xml
-<!-- example -->
-<bean id="alien" class="com.example.Alien" autowire="byType">
-	<property name="age" value="21"/>
-	<property name="com">
-		<bean id="com1" class="com.example.Laptop" primary="true">
-		</bean>
-	</property>
-</bean>
+```java
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!--    if we have one more class we can mention it here-->
+	<bean id="alien" class="com.example.Alien" autowire="byType">
+		<property name="age" value="24"></property>
+		<property name="com">
+			<bean id="com1" class="com.example.Laptop" primary="true">
+			</bean>
+		</property>
+		<!-- <constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg index="0" type="int" value="16"></constructor-arg> -->
+
+		<!-- <constructor-arg name="lap" ref="lap1"></constructor-arg> -->
+		<!-- <constructor-arg name="age" value="16"></constructor-arg> -->
+	</bean>
+	<bean class="com.example.Desktop" lazy-init="true">
+	</bean>
+</beans>
 ```
+```output
+INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created for Alien
+Object created for laptop
+24
+Inside Code method
+Compiling using Laptop
+[INFO] ------------------------------
+```
+
+`<bean id="com1" class="com.example.Laptop" primary="true"></bean>`
+
+- this bean is an inner bean inside `Alien` 
+- meaning this bean can only be used by the `Alien` class
