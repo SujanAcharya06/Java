@@ -98,8 +98,14 @@ java.lang.IllegalStateException: BeanFactory not initialized or already closed -
 	- default
 - `Prototype`
 	- If we mention `scope="prototype"` it will create new object every time we do `getBean()`
+```xml
+<bean id="alien" class="com.example.Alien" scope="prototype"></bean>
+```
 - `Request`
 - `Session`
+
+> [!NOTE]
+> when `scope=singleton` the object will be created at the time of Container initialization itself, but when `scope=prototype` the object will be created only when we use `getBean()` method
 
 - Singleton and Prototype is used in spring core
 - Request and session works for web or web sockets
@@ -116,32 +122,252 @@ obj = context.getBean("idName"); // this creates the object
 3. annotations
 
 ## Setter Injection
-- we are using setter method to assign the value
-		- `<property name="variableName" value=""></property>` in xml file
-		- for primitive types value works fine
+- We are using setter method to assign the value
+- It creates the bean then it checks for value if it is present then calls the setter method 
+```java
+public class Alien {
+	private int age;
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(int age) {
+		System.out.println("Setter called");
+		this.age = age;
+	}
+
+	public Alien() {
+		System.out.println("Object created");
+	}
+
+	public void code() {
+		System.out.println("Inside Code method");
+	}
+
+}
+```
+```logs
+mvn exec:java -Dexec.mainClass="com.example.App" 
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------------< com.example:spring1 >-------------------------
+[INFO] Building spring1 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created
+Setter called
+24
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.606 s
+[INFO] Finished at: 2026-02-18T06:31:51+05:30
+[INFO] ------------------------------------------------------------------------
+```
+
+- `<property name="variableName" value=""></property>` in xml file
+> [!NOTE]
+> `value=""` attribute is only for primitive data types
+
+- reference
+```xml
+<bean id="alien" class="com.example.Alien">
+	<property name="age" value="24"></property>
+	<property name="tech" value="Java"></property>
+	...
+</bean>
+```
+- for primitive types value works fine
+
+---
 
 ### `ref` Attribute
+
+- for Objects or references
+
 - getters and setters must be there
-		 - `<property name="variableName" ref="idOfrefBean"></property>`
-		 - as we are daling with the object reference bean must exist.
-		 - We can have multiple references for the same class the `id` differentiates these.
+	- `<property name="variableName" ref="idOfrefBean"></property>`
+- reference
+```xml
+<bean id="alien" class="com.example.Alien">
+	<property name="lap" ref="lap1"></property>
+</bean>
+<bean id="lap1" class="com.example.Laptop">
+</bean>
+```
+- If we do not provide `ref="lap1"` we get `NullPointerException`
+- For `primitive` we can use `value=""`
+- For reference we have to use `ref=""`
+	- as we are dealing with the object reference bean must exist.
+	- We can have multiple references for the same class the `id` differentiates these.
+
+---
 
 ## Constructor Injection
 - `<constructor-arg value="">`
-		- for objects -> `<constructor-arg ref="beanID"/>`
-		- when dealing with objects as parameters we have to provide referenes
-		- if there are multiple parameters in the constructor the **sequence** will be considered and matched accordingly.
-		- we can also use `index` attribute
-- `<constructor-arg index="0" value="">`
-- `<constructor-arg index="1" value="">`
-		- we can direclty use the `variable name` but sequence matters
-- `<constructor-arg name="var1" value="">`
-- `<constructor-arg name="var2" value="">`
+- example
+```xml
+<bean id="alien" class="com.example.Alien">
+	<constructor-arg value="16"/> </--if nothing inside tag -->
+	<property name="lap" ref="lap1"/>
+</bean>
+<bean id="lap1" class="com.example.Laptop">
+</bean>
+```
+
+```java
+public class Alien {
+	private int age = 15;
+
+	private Laptop lap;
+
+	public Alien(int age) {
+		System.out.println("Parameterized constructor called");
+		this.age = age;
+	}
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(int age) {
+		System.out.println("Setter called");
+		this.age = age;
+	}
+
+	public Alien() {
+		System.out.println("Object created for Alien");
+	}
+
+	public void code() {
+		System.out.println("Inside Code method");
+		lap.compile();
+	}
+
+	public Laptop getLap() {
+		return lap;
+	}
+
+	public void setLap(Laptop lap) {
+		this.lap = lap;
+	}
+
+}
+```
+```logs
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Parameterized constructor called
+Object created for laptop
+Inside Code method
+Compiling code in Laptop class
+```
+
+- If we have an object/reference inside constructor
+	- for objects -> `<constructor-arg ref="beanID"/>`
+	- when dealing with objects as parameters we have to provide references
+- example
+```xml
+<bean id="alien" class="com.example.Alien">
+	<constructor-arg value="16"></constructor-arg>
+	<constructor-arg ref="lap1"></constructor-arg>
+	<property name="lap" ref="lap1" />
+</bean>
+<bean id="lap1" class="com.example.Laptop">
+</bean>
+```
+
+```java
+public class Alien {
+	private int age = 15;
+
+	private Laptop lap;
+
+	public Alien(int age) {
+		System.out.println("Single Parameterized constructor called");
+		this.age = age;
+	}
+
+	public Alien(int age, Laptop lap) {
+		System.out.println("Two Parameterized constructor called");
+		this.age = age;
+		this.lap = lap;
+	}
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(int age) {
+		System.out.println("Setter called");
+		this.age = age;
+	}
+
+	public Alien() {
+		System.out.println("Object created for Alien");
+	}
+
+	public void code() {
+		System.out.println("Inside Code method");
+		lap.compile();
+	}
+
+	public Laptop getLap() {
+		return lap;
+	}
+
+	public void setLap(Laptop lap) {
+		this.lap = lap;
+	}
+
+}
+```
+
+```output
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created for laptop
+Two Parameterized constructor called
+Inside Code method
+Compiling code in Laptop class
+```
+
+- if there are multiple parameters in the constructor the **sequence** will be considered and matched accordingly.
+- We can specify the `type=""` attribute as below, it will match the arguments
+```xml
+<bean id="alien" class="com.example.Alien">
+	<constructor-arg type="com.example.Laptop" ref="lap1"></constructor-arg>
+	<constructor-arg type="int" value="16"></constructor-arg>
+	<property name="lap" ref="lap1" />
+</bean>
+<bean id="lap1" class="com.example.Laptop">
+</bean>
+```
+
+- If there are two `int` types then again there will be a mismatch so, 
+- we can also use `index` attribute
+	- `<constructor-arg index="0" value="">`
+	- `<constructor-arg index="1" value="">`
+- example
+```xml
+<bean id="alien" class="com.example.Alien">
+	<constructor-arg index="1" type="com.example.Laptop" ref="lap1"></constructor-arg>
+	<constructor-arg index="0" type="int" value="16"></constructor-arg>
+	<property name="lap" ref="lap1" />
+</bean>
+<bean id="lap1" class="com.example.Laptop">
+</bean>
+```
+
+- we can directly use the `variable name` but sequence matters
+	- `<constructor-arg name="var1" value="">`
+	- `<constructor-arg name="var2" value="">`
 - If we are not providing the constructor arguments in sequence then we can use
 - `@ConstructorProperties({"var1", "var2"})` annotation on top of the constructor being used.
 
 ## Autowire
-- if we don't want to mention the property explicitly if we want to ask spring framework to search for the dependancy based on name and type we can use
+- if we don't want to mention the property explicitly if we want to ask spring framework to search for the dependency based on name and type we can use
 		- `autowire="byName"`
 - tries to match the object by name
 		- if I have `autowire=byName` then if I explicitly provide
