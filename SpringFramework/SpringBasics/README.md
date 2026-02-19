@@ -26,7 +26,7 @@ mvn archetype:generate \
 2. Java based configuration
 3. Annotations
 
-1. `XML` based configuration
+### `XML` based configuration
 
 - `ApplicationContext context = new ClassPathXmlApplicationContext();`
 	- this sets the spring container
@@ -43,7 +43,7 @@ public class App {
 	}
 
 	public static void main(String[] args) {
-		ApplicationContext context = new ClassPathXmlApplicationContext();
+		ApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
 		Alien obj = (Alien)context.getBean("alien");
 		obj.code();
 	}
@@ -67,6 +67,7 @@ java.lang.IllegalStateException: BeanFactory not initialized or already closed -
 ```
 
 - we have to create the `<spring>.xml` in the class path -> `main`
+- `ApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");`
 - Spring want to manage the `beans` objects managed by spring framework
 
 
@@ -106,6 +107,7 @@ java.lang.IllegalStateException: BeanFactory not initialized or already closed -
 
 > [!NOTE]
 > when `scope=singleton` the object will be created at the time of Container initialization itself, but when `scope=prototype` the object will be created only when we use `getBean()` method
+- this does not mean the `lazy-init`
 
 - Singleton and Prototype is used in spring core
 - Request and session works for web or web sockets
@@ -118,12 +120,24 @@ ApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
 // we are getting the reference using context
 obj = context.getBean("idName"); // this creates the object
 ```
-2. using java based configuration
-3. annotations
 
 ## Setter Injection
 - We are using setter method to assign the value
-- It creates the bean then it checks for value if it is present then calls the setter method 
+- It check the spring.xml for `<bean></bean>` tag, creates all the beans then it checks for property tag with `value` attribute if it is present then calls the setter method. 
+
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!--    if we have one more class we can mention it here-->
+	<bean id="alien" class="com.example.Alien" autowire="byType">
+		<property name="age" value="24"></property>
+	</bean>
+	<bean id="com1" class="com.example.Laptop" primary="true">
+	</bean>
+</beans>
+```
+
 ```java
 public class Alien {
 	private int age;
@@ -172,7 +186,7 @@ Setter called
 > [!NOTE]
 > `value=""` attribute is only for primitive data types
 
-- reference
+- we can add values for other fields as well
 ```xml
 <bean id="alien" class="com.example.Alien">
 	<property name="age" value="24"></property>
@@ -190,7 +204,6 @@ Setter called
 
 - getters and setters must be there
 	- `<property name="variableName" ref="idOfrefBean"></property>`
-- reference
 ```xml
 <bean id="alien" class="com.example.Alien">
 	<property name="lap" ref="lap1"></property>
@@ -359,6 +372,13 @@ Compiling code in Laptop class
 <bean id="lap1" class="com.example.Laptop">
 </bean>
 ```
+```java
+public Alien(int age, Laptop lap) {
+	System.out.println("Two Parameterized constructor called");
+	this.age = age;
+	this.lap = lap;
+}
+```
 
 - we can directly use the `variable name` but sequence matters
 	- `<constructor-arg name="var1" value="">`
@@ -484,10 +504,10 @@ Compiling using Laptop
 <bean id="com" class="com.example.Laptop">
 </bean>
 ```
-- it will still work
+- it will still work as we have changed the id of bean Laptop
 
-- now as `name` and `value` property is same if we do not use it say
-- we get a `NullPointerException`
+- now as `name` and `value` property is same if we do not wish to specify it in the `<bean>` tag
+	- we get a `NullPointerException`
 
 - we can tell spring to look at the `name="com"` and `autowire = byName`
 ```xml
@@ -537,7 +557,7 @@ Compiling using Laptop
 
 - `autowire="byType"`
 - tries to match the object by type
-- when the bean name is different then the field name we can use above option
+- when the bean name is different then the field name we can use above attribute
 ```xml
 <bean id="alien" class="com.example.Alien" autowire="byType">
 	<property name="age" value="24"></property>
@@ -590,6 +610,7 @@ Compiling using Desktop.
 
 - We will get `UnsatisfiedDependencyException`
 - Spring is confused as it find two references of same type and unable to inject properly 
+	- above as both `Laptop` and `Desktop` are of type `Computer`
 
 ```output
 Feb 18, 2026 10:19:58 PM org.springframework.context.support.ClassPathXmlApplicationContext refresh
@@ -719,7 +740,7 @@ Compiling using Laptop
 
 - Say I do not want `Desktop` object to be created when the container is initialized
 - I want to create the object only when I call it for the first time
-- `lazy-init="true"`
+- I can use `lazy-init="true"` attribute inside `Desktop` bean
 ```xml
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -903,4 +924,4 @@ Compiling using Laptop
 `<bean id="com1" class="com.example.Laptop" primary="true"></bean>`
 
 - this bean is an inner bean inside `Alien` 
-- meaning this bean can only be used by the `Alien` class
+- meaning this bean can only be accessed by the `Alien` class
