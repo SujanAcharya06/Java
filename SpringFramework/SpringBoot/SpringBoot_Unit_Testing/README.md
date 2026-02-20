@@ -1,6 +1,3 @@
-
-
-
 ## Spring Boot Unit Testing - JUnit + Mockito + Code coverage
 
 
@@ -79,12 +76,10 @@ for test class -> `com.thriftyBug.payments.service.impl.PaymentServiceImplTest`
 
 - JUnit + Mockito combination
 
-
 #### How to execute your Testclass
 - create a test method, annotate with `@Test`
 - on that class, right click -> run as -> JUnit testing
 - for showing results of JUnit, left side panel -> JUnit View is available
-
 
 - For writing test method, there is a structure - 3 parts
 1. `Arrange`
