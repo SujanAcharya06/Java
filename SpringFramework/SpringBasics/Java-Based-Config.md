@@ -376,25 +376,68 @@ Compiling using Laptop
 ---
 
 ## Component Stereotype Annotation
+
 - `@Component` is a stereotype annotation that tells the Spring framework to manage object creation.
 - Any class that should be automatically managed by Spring must be annotated with `@Component`.
 - After adding `@Component`, we don’t need `@Bean` methods—Spring will handle object creation automatically.
-- We can also use `@ComponentScan("package name")` to specify package scanning.
+- On top of `AppConfig` class mentioned in `ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class)`
+	- We can also use `@ComponentScan("package name")` to specify package scanning.
+
+- we would still get this error
+```output
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created for Alien
+Desktop object created
+Object created for laptop
+0
+Inside Code method
+[WARNING] 
+java.lang.NullPointerException: Cannot invoke "com.example.Computer.compile()" because "this.com" is null
+    at com.example.Alien.code (Alien.java:38)
+    at com.example.App.main (App.java:20)
+    at jdk.internal.reflect.DirectMethodHandleAccessor.invoke (DirectMethodHandleAccessor.java:103)
+    at java.lang.reflect.Method.invoke (Method.java:580)
+```
+- As `Alien` class do not know how to connect the `Computer` class
+---
 
 ## Autowired Field, Constructor, and Setter
-- If Spring is unable to create objects for a specified field, we can use `@Autowired` with `@Qualifier` to explicitly specify which object to create.
-- We can also specify a name in `@Component("name")`, which can be referenced in `@Qualifier`.
+- If Spring is unable to create objects for a specified field, we can use `@Autowired` with `@Qualifier("classname")` to explicitly specify which object to create.
+	- By default the name would be the dependent classname in lowercase.
+- We can also specify a name in `@Component("name")`, which can be referenced in `@Qualifier("name")`.
+
+- We can also do `Setter Injection` as shown below
+```java
+@Autowired
+@Qualifier("lap")
+public void setCom(Computer com) {
+	this.com = com;
+}
+```
+```output
+[INFO] --- exec:3.6.3:java (default-cli) @ spring1 ---
+Object created for Alien
+Object created for laptop
+Desktop object created
+0
+Inside Code method
+Compiling using Laptop
+```
 
 ### Types of Dependency Injection:
 1. **Field Injection** → `@Autowired` above a field.
 2. **Constructor Injection** → `@Autowired` above a constructor.
 3. **Setter Injection** → `@Autowired` above a setter.
     - If not using field injection, it is recommended to use `@Autowired` with setters.
-
+---
 ## Primary Annotation
 - We can mention any one of the class as `@Primary` then this class will be used by the spring to create an object if there is confusion
 - If we mention both `@Qualifier` as well as `@Primary` then the first preference will be given to `@Qualifier` one.
 
+---
 ## Scope and Values
--  We can inject values by using `@Value` annotation
--  Advantage of using this is that we can use a separate properties file to inject the values.
+
+- Using `@Scope("prototype")` directly on class we can specify the kind of objects we want to create.
+- We can inject values by using `@Value` annotation
+- Advantage of using this is that we can use a separate properties file to inject the values.
+---
