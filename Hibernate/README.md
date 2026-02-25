@@ -31,7 +31,7 @@
 	- To get the reference of `SessionFactory` we need to first get an object of `Configuration`
 		- `Configuration`
 			- > [!NOTE]
-			> org.hibernate.cfg
+				> org.hibernate.cfg
 			- is a class
 			- we can create its object by using `new` keyword
 			- once we get the `Configuration` object we can call the `SessionFactory`'s `buildSessionFactory()` method
