@@ -415,9 +415,173 @@ public ModelAndView add(@RequestParam("num1") int num, int num2, ModelAndView mv
 	- If we want to return both model and view name then `ModelAndView` is suitable
 - We can also set multiple objects using `mv.addObject("name", name)`
 ---
+### Need for model attribute
+
+- Suppose we have following request
+```java
+@Controller
+public class HomeController {
+
+	private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
+
+	@RequestMapping("/")
+	public String home() {
+		return "index";
+	}
+
+	@RequestMapping("addStudent")
+	public ModelAndView add(@RequestParam("sId") int sId, @RequestParam("sName") String sName, ModelAndView mv) {
+		logger.info("Received sId: {}, sName: {}", sId, sName);
+
+		Student student = new Student();
+		student.setsId(sId);
+		student.setsName(sName);
+
+		mv.addObject("student", student);
+		mv.setViewName("result");
+		return mv;
+	}
+
+}
+```
+
+```java
+public class Student {
+	private int sId;
+	private String sName;
+
+	public int getsId() {
+		return sId;
+	}
+
+	public void setsId(int sId) {
+		this.sId = sId;
+	}
+
+	public String getsName() {
+		return sName;
+	}
+
+	public void setsName(String sName) {
+		this.sName = sName;
+	}
+
+	@Override
+	public String toString() {
+		return "Student [sId=" + sId + ", sName=" + sName + "]";
+	}
+
+}
+```
+
+```jsp
+<%@page language="java" %>
+
+<html>
+	<body>
+		<h2>Student</h2>
+		<form action="addStudent">
+			<label for="sId">Enter student id:</label>
+			<input type="text" id="sId" name="sId"><br>
+			<label for="sName">Enter student name:</label>
+			<input type="text" id="sName" name="sName"><br>
+			<input type="submit" value="submit">
+		</form	
+	</body>
+</html>
+```
+
+```jsp
+<%@page language="java" %>
+
+<html>
+	<body>
+		<h2>Welcome to Springboot</h2>
+		<p>${student}</p>
+	</body>
+</html>
+```
+
+![](assets/2026-02-27-23-06-43.png)
+
+- This works fine as the `Student` class have only two fields, so we had only two `@RequestParam`
+- Suppose we have many values, this would be not feasible
+
 ### ModelAttribute
 
-- `ModelAttribute` if there are multiple attributes we can use this also specifying this is also optional.
+- If there are multiple values, we can use `@ModelAttribute` annotation
+	- we can directly return the jsp view
+```java
+@RequestMapping("addStudent")
+public String add(@ModelAttribute Student student) {
+	logger.info("Received sId: {}, sName: {}", student.getsId(), student.getsName());
+	return "result";
+}
+```
+
+- If we want to provide a different name in `.jsp file` then we can do it using
+```java
+@RequestMapping("addStudent")
+public String add(@ModelAttribute("s1") Student student) {
+	logger.info("Received sId: {}, sName: {}", student.getsId(), student.getsName());
+	return "result";
+}
+```
+
+```jsp
+<%@page language="java" %>
+
+<html>
+	<body>
+		<h2>Welcome to Springboot</h2>
+		<p>${s1}</p>
+	</body>
+</html>
+```
+- If we are using same name as of the object in the `.jsp` then we don't have to specify `@ModelAttribute` annotation as well
+
+
+- We can also use `@ModelAttribute` on method level
+
+```java
+@Controller
+public class HomeController {
+
+	private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
+
+	@ModelAttribute("course")
+	public String course() {
+		return "Java";
+	}
+
+	@RequestMapping("/")
+	public String home() {
+		return "index";
+	}
+
+	@RequestMapping("addStudent")
+	public String add(Student student) {
+		logger.info("Received sId: {}, sName: {}", student.getsId(), student.getsName());
+		return "result";
+	}
+
+}
+```
+
+```jsp
+<%@page language="java" %>
+
+<html>
+	<body>
+		<h2>Welcome to Tutorial</h2>
+		<p>${student}</p>
+		<p>Welcome to ${course} :)</p>
+	</body>
+</html>
+```
+
+![](assets/2026-02-27-23-25-13.png)
+
 ---
 
 ## Links
