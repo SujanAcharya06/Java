@@ -38,8 +38,8 @@
 > [!NOTE]
 > If we would like to build applications with `servlets` it is suggested to go with `external tomcat` as it offers more features 
 - Steps
-	1. Create a `maven` project
-		- `maven-archetype-quickstart`
+1. Create a `maven` project
+	- `maven-archetype-quickstart`
 ```bash
 mvn archetype:generate \
   -DgroupId=com.example \
@@ -48,8 +48,8 @@ mvn archetype:generate \
   -DinteractiveMode=false
 ```
 
-	2. Add dependency
-	```xml
+2. Add dependency
+```xml
 <dependency>
 	<groupId>org.apache.tomcat.embed</groupId>
 	<artifactId>tomcat-embed-core</artifactId>
@@ -63,8 +63,8 @@ mvn archetype:generate \
 	<scope>provided</scope>
 </dependency>
 ```
-	3. Do `mvn compile`
-	4. Test the maven project by running -> `mvn exec:java -Dexec.mainClass="com.example.App"`
+3. Do `mvn compile`
+4. Test the maven project by running -> `mvn exec:java -Dexec.mainClass="com.example.App"`
 	
 - Building a `Servlet` class
 - One of the way to create a `Servlet` is by extending `HttpServlet` class

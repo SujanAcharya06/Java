@@ -9,8 +9,6 @@
   --dependencies=web,dep1,... \
   nameOfSpringprject 
 ```
-- 
-
 - Inside `main` directory create a folder named `webapp` and create a file named `index.jsp` which will be searched by the spring
 ```
 - main/
