@@ -582,9 +582,79 @@ public class HomeController {
 
 ---
 
+### Spring boot with Thymeleaf
+
+- `Thymeleaf` is the modern way of using JSP's
+- Usually backend will be in spring or sprinb-boot and frontend will be in `React` or `Anugular`
+- We need to add `Thymeleaf` dependencies in `pom.xml`
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-thymeleaf</artifactId>
+</dependency>
+```
+- We can remove the `tomcat-jasper` dependencies as it is only for working with jsp files
+- Once we add the `thymeleaf` pom dependencies, the spring-boot project starts behaving differently
+- Now, by default the application searches for `.html` files from this directory.
+```
+src/
+	main/
+		java/
+		resources/
+			templates/
+				index.html
+				result.html
+```
+- We can remove all jsp related keywords as it is not needed
+- We are currently using `JSP` syntax
+- Thymeleaf have it's own syntax so we have to use it and spring can fill in those placeholders
+- First of all we set the `thymeleaf namespace` to all the `.html` files
+```html
+<html xmlns:th="http://www.thymeleaf.org">
+```
+- We are returning both model and view so the data is sent to the view, we can get it by following below thymeleaf syntax
+
+
+```html
+<!-- index.html -->
+<html xmlns:th="http://www.thymeleaf.org">
+	<body>
+		<h2>Student</h2>
+		<form action="addStudent">
+			<label for="sId">Enter student id:</label>
+			<input type="text" id="sId" name="sId"><br>
+			<label for="sName">Enter student name:</label>
+			<input type="text" id="sName" name="sName"><br>
+			<input type="submit" value="submit">
+		</form>
+	</body>
+</html>
+```
+
+```html
+<!-- result.html -->
+<html xmlns:th="https://www.thymeleaf.org">
+	<body>
+		<h2>Welcome to Tutorial</h2>
+		<p th:text="${student}">${student}</p>
+		<p th:text="'Welcome to the ' + ${course} + ' Tutorial, Have a nice day!'"/>
+	</body>
+</html>
+```
+
+![](assets/2026-03-02-19-31-50.png)
+
+![](assets/2026-03-02-19-32-20.png)
+
+
+---
 ## Links
 
+- mvc application properties
 - [common spring application properties](https://docs.spring.io/spring-boot/appendix/application-properties/index.html)
 - [tutorialspoint](https://www.tutorialspoint.com/spring_boot/spring_boot_application_properties.htm)
 
+- Thymeleaf docs
+- [Official Thyemleaf.org](https://www.thymeleaf.org/)
+- [Thymeleaf Spring-boot docs](https://docs.spring.io/spring-framework/reference/web/webmvc-view/mvc-thymeleaf.html)
 ---
