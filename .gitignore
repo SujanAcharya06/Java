@@ -34,3 +34,4 @@ bin/
 **.class
 
 **/dat
+.env
