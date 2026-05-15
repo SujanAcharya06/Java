@@ -2024,7 +2024,3 @@ Spring says:
 * Only needed in special cases (like multiple constructors or older versions)
 
 ---
-
-If you want, I can also show:
-Record vs Class vs Lombok `@Data` comparison (very common interview question)
----
